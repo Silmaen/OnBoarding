@@ -18,10 +18,6 @@ namespace ob::core {
          */
         void setup() override;
         /**
-         * \brief to be called every frame
-         */
-        void frame() override;
-        /**
          * \brief setup the current time
          * \param hours the hour in clock (24 hours format)
          * \param minutes the minutes on the clock
@@ -58,43 +54,43 @@ namespace ob::core {
          *  * %s  the second
          * \return the date in the given format
          */
-        String getTimeStr(const String &format = "%Y %M %D %h:%m:%s") const;
+        [[nodiscard]] String getTimeStr(const String &format = "%Y %M %D %h:%m:%s") const;
 
         /**
          * \brief get the current year
          * \return the current year
          */
-        uint16_t getYear() const { return internalTime.year; }
+        [[nodiscard]] uint16_t getYear() const { return internalTime.year; }
 
         /**
          * \brief get the current month
          * \return the current month
          */
-        uint8_t getMonth() const { return internalTime.month; }
+        [[nodiscard]] uint8_t getMonth() const { return internalTime.month; }
 
         /**
          * \brief get the current day
          * \return the current day
          */
-        uint8_t getDay() const { return internalTime.day; }
+        [[nodiscard]] uint8_t getDay() const { return internalTime.day; }
 
         /**
          * \brief get the current hours
          * \return the current hours
          */
-        uint8_t getHours() const { return internalTime.hour; }
+        [[nodiscard]] uint8_t getHours() const { return internalTime.hour; }
 
         /**
          * \brief get the current minutes
          * \return the current minutes
          */
-        uint8_t getMinutes() const { return internalTime.minute; }
+        [[nodiscard]] uint8_t getMinutes() const { return internalTime.minute; }
 
         /**
          * \brief get the current seconds
          * \return the current seconds
          */
-        uint8_t getSeconds() const { return internalTime.second; }
+        [[nodiscard]] uint8_t getSeconds() const { return internalTime.second; }
 
 #ifdef CONFIG_UNIX_TIME
         uint32_t getUnixTime(struct ts t);
@@ -128,12 +124,12 @@ namespace ob::core {
          * \brief very simple struct to handle minimal timestamp
          */
         struct simpleTimeStamp {
-            uint16_t year=0;
-            uint16_t month=0;
-            uint16_t day=0;
-            uint16_t hour=0;
-            uint16_t minute=0;
-            uint16_t second=0;
+            uint16_t year = 0;
+            uint8_t month = 0;
+            uint8_t day = 0;
+            uint8_t hour = 0;
+            uint8_t minute = 0;
+            uint8_t second = 0;
         } internalTime;
     };
 }

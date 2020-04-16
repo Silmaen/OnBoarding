@@ -5,15 +5,15 @@
 #include "fileSystem.h"
 //#include <SdFat/src/SdFat.h>
 
-template<> ob::core::fileSystem ob::baseManager<ob::core::fileSystem>::instance = ob::core::fileSystem();
+template<> ob::core::fileSystem ob::baseManager<ob::core::fileSystem>::instance{ob::core::fileSystem()};
 
-constexpr uint8_t SD_CS = SS;
+constexpr uint8_t sdCs = SS;
 
 //SdFat sdCard;
 
 namespace ob::core {
 
     fileSystem::fileSystem() {
-        //sdCard.begin(SD_CS);
+        //sdCard.begin(sdCs);
     }
 }

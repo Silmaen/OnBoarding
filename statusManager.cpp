@@ -4,7 +4,7 @@
  */
 #include "statusManager.h"
 // instantiation of the manager
-template<> ob::core::statusManager ob::baseManager<ob::core::statusManager>::instance = ob::core::statusManager();
+template<> ob::core::statusManager ob::baseManager<ob::core::statusManager>::instance{ob::core::statusManager()};
 
 namespace ob::core {
     // -----------------------------------------------------------------------------------------------------------------
@@ -14,7 +14,7 @@ namespace ob::core {
     }
     // -----------------------------------------------------------------------------------------------------------------
     void statusManager::frame() {
-        baseManager::frame();
+        //baseManager::frame();
         uint64_t loopCurrent = millis() - loopStart;
         switch (code){
             case statusCode::Running:
@@ -59,8 +59,6 @@ namespace ob::core {
                 return F("Non Blocking Error");
             case statusCode ::BlockingError:
                 return F("Blocking Error");
-            default:
-                return F("Unknown error");
         }
     }
     // -----------------------------------------------------------------------------------------------------------------

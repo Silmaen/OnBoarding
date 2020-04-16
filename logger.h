@@ -45,10 +45,6 @@ namespace ob::core{
          * \param msgLevel the verbosity level of the message
          */
         void logMessage(const String& msg, logLevel msgLevel);
-        /**
-         * \brief to be called every frame
-         */
-        void frame() override;
     private:
         /**
         * \brief base constructor

@@ -83,6 +83,7 @@ bool initRadio(){
     // starting all
     radio.startListening();
     radio.powerUp();
+    return true;
 }
 
 void setup() {

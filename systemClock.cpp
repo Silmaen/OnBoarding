@@ -6,7 +6,7 @@
 #include <Wire.h>
 #include "systemClock.h"
 
-template<> ob::core::systemClock ob::baseManager<ob::core::systemClock>::instance = ob::core::systemClock();
+template<> ob::core::systemClock ob::baseManager<ob::core::systemClock>::instance{ob::core::systemClock()};
 
 
 #ifndef NO_CLOCK
@@ -49,7 +49,9 @@ namespace ob::core {
 #ifndef NO_CLOCK
 #ifdef __AVR__
 
+#ifdef CONFIG_UNIX_TIME
 #include <avr/pgmspace.h>
+#endif
 
     // Workaround for http://gcc.gnu.org/bugzilla/show_bug.cgi?id=34734
 #ifdef PROGMEM
@@ -69,7 +71,7 @@ namespace ob::core {
 // this will add about 324bytes to your firmware
 //#define CONFIG_UNIX_TIME
 #endif
-
+#ifdef USE_HELPER
     struct ts {
         uint8_t sec = 0;         ///< seconds
         uint8_t min = 0;         ///< minutes
@@ -85,6 +87,7 @@ namespace ob::core {
         uint32_t unixtime=0;   ///< seconds since 01.01.1970 00:00:00 UTC
 #endif
     };
+#endif
 
     uint8_t dec2Bcd(const uint8_t val) { return ((val / 10 * 16) + (val % 10)); }
 
@@ -110,7 +113,7 @@ namespace ob::core {
         Wire.beginTransmission(ds3231I2CAddr);
         Wire.write(addr);
         Wire.endTransmission();
-        uint8_t gotData = false;
+        bool gotData = false;
         uint32_t start = millis(); // start timeout
         while (millis() - start < ds3231TransactionTimeout) {
             if (Wire.requestFrom(ds3231I2CAddr, 1u) == 1) {
@@ -206,7 +209,7 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
         Wire.beginTransmission(ds3231I2CAddr);
         Wire.write(ds3231TemperatureAddr);
         Wire.endTransmission();
-        uint8_t gotData = false;
+        bool gotData = false;
         uint32_t start = millis(); // start timeout
         while (millis() - start < ds3231TransactionTimeout) {
             if (Wire.requestFrom(ds3231I2CAddr, 2u) == 2) {
@@ -396,7 +399,7 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
 
     void init(const uint8_t &ctrlReg) {
         setCreg(ctrlReg);
-        set32KHzOutput(false);
+        set32KHzOutput(0u);
     }
 
 #ifdef USE_HELPER
@@ -470,7 +473,7 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
 #endif
 
     void systemClock::setup() {
-        baseManager::setup();
+        //baseManager::setup();
 
 #ifndef NO_CLOCK
         Wire.begin();
@@ -522,12 +525,6 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
         return result;
     }
 
-    void systemClock::frame() {
-        // update internal time with the device one
-        baseManager::frame();
-        updateFromDevice();
-    }
-
     void systemClock::updateDevice() {
 
 #ifndef NO_CLOCK
@@ -556,7 +553,6 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
     void systemClock::updateFromDevice() {
 
 #ifndef NO_CLOCK
-        uint8_t century = 0;
         Wire.beginTransmission(ds3231I2CAddr);
         Wire.write(ds3231TimeCalAddr);
         Wire.endTransmission();
@@ -578,8 +574,8 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
         internalTime.day = bcd2Dec(Wire.read());
         uint8_t n = Wire.read();
         internalTime.month = bcd2Dec(n & 0x1Fu);
-        century = (n & 0x80u) >> 7u;
-        internalTime.year = 1900 + bcd2Dec(Wire.read()) + 100 * (century == 1);
+        uint8_t century = (n & 0x80u) >> 7u;
+        internalTime.year = 1900u + bcd2Dec(Wire.read()) + 100u * (century == 1u);
 #endif
     }
 }

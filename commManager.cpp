@@ -13,7 +13,7 @@
 
 #include "commandParser.h"
 
-template<> ob::comm::commManager ob::baseManager<ob::comm::commManager>::instance = ob::comm::commManager();
+template<> ob::comm::commManager ob::baseManager<ob::comm::commManager>::instance{ob::comm::commManager()};
 
 #ifndef NO_RF
 RF24 radio(10, 9);
@@ -23,7 +23,7 @@ namespace ob::comm {
     core::commandParser &command = core::commandParser::get();
 
     void commManager::setup() {
-        baseManager::setup();
+        //baseManager::setup();
         // initialize the serial communication
         Serial.begin(115200);
 
@@ -59,7 +59,6 @@ namespace ob::comm {
     }
 
     void commManager::frame() {
-        baseManager::frame();
         if (Serial.available()) {
             uint16_t index = 0;
             while (Serial.available() && index < maxBufferSize)

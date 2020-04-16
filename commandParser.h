@@ -14,16 +14,6 @@ namespace ob::core {
 
     public:
         /**
-         * \brief to be called at setup time
-         */
-        void setup() override;
-
-        /**
-         * \brief to be called every frame
-         */
-        void frame() override;
-
-        /**
          * \brief parse and treat the command
          * \param cmd the command to parse
          */
@@ -44,7 +34,6 @@ namespace ob::core {
         commandParser() {
             managerName = F("Command parser");
         }
-
         /**
          * \brief destructor
          */
@@ -54,7 +43,6 @@ namespace ob::core {
          * \brief private copy constructor to avoid copy
          */
         commandParser(const commandParser &) = default;
-
         /**
          * \brief get a string for the up time
          * \return the uptime in Days, hours, minutes, seconds (as float)

@@ -8,25 +8,18 @@
 #include "commManager.h"
 #include "systemClock.h"
 
-template<> ob::core::commandParser ob::baseManager<ob::core::commandParser>::instance = ob::core::commandParser();
+template<> ob::core::commandParser ob::baseManager<ob::core::commandParser>::instance{ob::core::commandParser()};
 
 namespace ob::core {
 
     comm::commManager &communication = comm::commManager::get();
     systemClock &clock = systemClock::get();
 
-    void commandParser::setup() {
-        baseManager::setup();
-    }
-
-    void commandParser::frame() {
-        baseManager::frame();
-    }
 
     void commandParser::treatCommand(const String &cmd) {
         String basecmd(cmd);
         basecmd.trim();
-        String pcmd = basecmd.substring(0, basecmd.indexOf(" "));
+        String pcmd = basecmd.substring(0u, basecmd.indexOf(" "));
         pcmd.trim();
         String parameters = basecmd.substring(basecmd.indexOf(" "));
         parameters.trim();
@@ -67,7 +60,7 @@ namespace ob::core {
             communication.send(F("Error: bad time format, must be hh:mm:ss.\n"));
             return false;
         }
-        int hours = parameter.substring(0, first).toInt();
+        int hours = parameter.substring(0u, first).toInt();
         int minutes = parameter.substring(first + 1, last).toInt();
         int seconds = parameter.substring(last + 1).toInt();
         clock.setTime(hours, minutes, seconds);

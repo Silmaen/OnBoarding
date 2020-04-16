@@ -63,19 +63,19 @@ namespace ob::core {
         [[nodiscard]] path filename()const {
             if (isVoid() || pathName == "/") return path();
             int idx = pathName.lastIndexOf("/");
-            if (idx == -1) return *this;
-            return path(pathName.substring(idx));
+            if (idx < 0) return *this;
+            return path(pathName.substring(static_cast<uint32_t>(idx)));
         }
         /**
          * \brief return the path without the last sub-folder of file
          * \return the dirname
          */
-        [[nodiscard]] path dirname()const{
+        [[nodiscard]] path dirname()const {
             if (isVoid()) return path();
             if (pathName == "/") return *this;
             int idx = pathName.lastIndexOf("/");
-            if (idx == -1) return path();
-            return path(pathName.substring(0,idx));
+            if (idx < 0) return path();
+            return path(pathName.substring(0, static_cast<uint32_t>(idx)));
 
         }
         /**

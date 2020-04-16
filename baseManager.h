@@ -43,7 +43,7 @@ namespace ob {
          * \brief private copy operator to avoid copy the singleton
          * \return Referent to this
          */
-        T& operator=(const T&){}
+        T &operator=(const T &) = default;
     };
 
 }

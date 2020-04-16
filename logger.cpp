@@ -14,9 +14,5 @@ void ob::core::logger::logMessage(const String&  msg, ob::core::logLevel msgLeve
 
 }
 
-void ob::core::logger::frame() {
-    baseManager::frame();
-    //
-}
 
 #endif
