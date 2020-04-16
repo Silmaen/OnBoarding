@@ -25,7 +25,7 @@ set(${PROJECT_NAME}_SRCS ${LIBSRCS})
 set(${PROJECT_NAME}_HDRS ${LIBHDRS})
 
 ### Additional static libraries to include in the target.
-set(${PROJECT_NAME}_ARDLIBS Wire SPI)
+set(${PROJECT_NAME}_ARDLIBS Wire)
 set(${PROJECT_NAME}_LIBS )
 
 ### Main sketch file
@@ -67,7 +67,7 @@ project(${RECEIVER_PROJECT_NAME})
 # set(${RECEIVER_PROJECT_NAME}_HDRS ${LIBHDRS})
 
 ### Additional static libraries to include in the target.
-set(${RECEIVER_PROJECT_NAME}_ARDLIBS SPI RF24)
+set(${RECEIVER_PROJECT_NAME}_ARDLIBS SPI Mirf)
 # set(${RECEIVER_PROJECT_NAME}_LIBS )
 
 
@@ -83,7 +83,7 @@ set(${RECEIVER_PROJECT_NAME}_SKETCH Receiver/receiver.ino)
 # link_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 
 # For nested library sources replace ${LIB_NAME} with library name for each library
-# set(_RECURSE true)
+set(Mirf_RECURSE true)
 
 #### Additional settings for programmer. From programmers.txt
 set(${RECEIVER_PROJECT_NAME}_PROGRAMMER avrispmkii)
