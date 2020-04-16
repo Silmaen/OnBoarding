@@ -4,9 +4,6 @@
  *
  */
 #pragma once
-#ifdef RECEIVER
-#error "No clock in the receiver"
-#endif
 #include "baseManager.h"
 
 namespace ob::core {
@@ -61,37 +58,44 @@ namespace ob::core {
          *  * %s  the second
          * \return the date in the given format
          */
-        String getTimeStr(const String& format="%Y %M %D %h:%m:%s");
+        String getTimeStr(const String &format = "%Y %M %D %h:%m:%s") const;
+
         /**
          * \brief get the current year
          * \return the current year
          */
-        uint16_t getYear(){return internalTime.year;}
+        uint16_t getYear() const { return internalTime.year; }
+
         /**
          * \brief get the current month
          * \return the current month
          */
-        uint8_t  getMonth(){return internalTime.month;}
+        uint8_t getMonth() const { return internalTime.month; }
+
         /**
          * \brief get the current day
          * \return the current day
          */
-        uint8_t  getDay(){return internalTime.day;}
+        uint8_t getDay() const { return internalTime.day; }
+
         /**
          * \brief get the current hours
          * \return the current hours
          */
-        uint8_t  getHours(){return internalTime.hour;}
+        uint8_t getHours() const { return internalTime.hour; }
+
         /**
          * \brief get the current minutes
          * \return the current minutes
          */
-        uint8_t  getMinutes(){return internalTime.minute;}
+        uint8_t getMinutes() const { return internalTime.minute; }
+
         /**
          * \brief get the current seconds
          * \return the current seconds
          */
-        uint8_t  getSeconds(){return internalTime.second;}
+        uint8_t getSeconds() const { return internalTime.second; }
+
 #ifdef CONFIG_UNIX_TIME
         uint32_t getUnixTime(struct ts t);
 #endif

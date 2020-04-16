@@ -4,6 +4,7 @@
  */
 #pragma once
 #include <arduino.h>
+#include "globalConfig.h"
 /**
  * \brief base namespace for OnBoarding project
  */

@@ -3,9 +3,6 @@
  * \date 09/04/2020
  */
 #pragma once
-#ifdef RECEIVER
-#error "No filesystem in the receiver"
-#endif
 #include "baseManager.h"
 
 namespace ob::core {

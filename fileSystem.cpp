@@ -2,7 +2,6 @@
  * \author argawaen
  * \date 09/04/2020
  */
-#ifndef RECEIVER
 #include "fileSystem.h"
 //#include <SdFat/src/SdFat.h>
 
@@ -18,4 +17,3 @@ namespace ob::core {
         //sdCard.begin(SD_CS);
     }
 }
-#endif

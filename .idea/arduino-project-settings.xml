@@ -3,6 +3,6 @@
   <component name="Arduino Project Settings">
     <option name="baudRate" value="115200" />
     <option name="immediateSend" value="false" />
-    <option name="port" value="COM11" />
+    <option name="port" value="COM12" />
   </component>
 </project>

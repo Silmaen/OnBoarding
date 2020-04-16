@@ -17,16 +17,16 @@ file(GLOB
     )
 
 file(GLOB
-    LIBHDRS
-    *.h
-    )
+        LIBHDRS
+        *.h
+        )
 # Define additional source and header files or default arduino sketch files
 set(${PROJECT_NAME}_SRCS ${LIBSRCS})
 set(${PROJECT_NAME}_HDRS ${LIBHDRS})
 
 ### Additional static libraries to include in the target.
-set(${PROJECT_NAME}_ARDLIBS Wire)
-set(${PROJECT_NAME}_LIBS )
+set(${PROJECT_NAME}_ARDLIBS Wire SPI RF24)
+set(${PROJECT_NAME}_LIBS)
 
 ### Main sketch file
 #set(${PROJECT_NAME}_SKETCH OnBoarding.ino)
@@ -44,7 +44,7 @@ set(${PROJECT_NAME}_LIBS )
 
 #### Additional settings for programmer. From programmers.txt
 set(${PROJECT_NAME}_PROGRAMMER avrispmkii)
-set(${PROJECT_NAME}_PORT COM14)
+set(${PROJECT_NAME}_PORT COM13)
 #setTime(micro.upload.speed 115200)
 
 ## Verbose build process

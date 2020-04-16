@@ -4,12 +4,12 @@
  *
  */
 #include <Wire.h>
-#ifndef RECEIVER
 #include "systemClock.h"
 
 template<> ob::core::systemClock ob::baseManager<ob::core::systemClock>::instance = ob::core::systemClock();
 
 
+#ifndef NO_CLOCK
 PROGMEM constexpr uint8_t ds3231TransactionTimeout = 100;   ///< Wire NAK/Busy timeout in ms
 
 PROGMEM constexpr uint32_t secondsFrom1970To2000 = 946684800;
@@ -43,9 +43,10 @@ PROGMEM constexpr uint8_t ds3231StatusA2F = 0x02;    ///< Alarm 2 Flag
 PROGMEM constexpr uint8_t ds3231StatusBusy = 0x04;    ///< device is busy executing TCXO
 PROGMEM constexpr uint8_t ds3231StatusEn32Khz = 0x08;    ///< Enable 32KHz Output
 PROGMEM constexpr uint8_t ds3231StatusOsf = 0x80;    ///< Oscillator Stop Flag
-
+#endif
 namespace ob::core {
 
+#ifndef NO_CLOCK
 #ifdef __AVR__
 
 #include <avr/pgmspace.h>
@@ -306,7 +307,7 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
         }
 
 
-    // flags are: A2M2 (minutes), A2M3 (hour), A2M4 (day) 0 to enable, 1 to disable, DY/DT (dayofweek == 1/dayofmonth == 0) -
+    // flags are: A2M2(minutes), A2M3 (hour), A2M4 (day) 0 to enable, 1 to disable, DY/DT (dayofweek==1/dayofmonth==0)-
         void setA2(const uint8_t mi, const uint8_t h, const uint8_t d, const uint8_t *flags) {
             uint8_t t[3] = {mi, h, d};
             uint8_t i;
@@ -368,7 +369,7 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
 
 #ifdef CONFIG_UNIX_TIME
     const uint8_t daysInMonth [12] PROGMEM = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-    // returns the number of seconds since 01.01.1970 00:00:00 UTC, valid for 2000..FIXME
+    // returns the number of seconds since 01.01.1970 00:00:00 UTC, valid for 2000..
     uint32_t systemClock::getUnixTime(struct ts t){
         uint8_t i;
         uint16_t d;
@@ -466,10 +467,15 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
     }
 #endif
 
+#endif
+
     void systemClock::setup() {
         baseManager::setup();
+
+#ifndef NO_CLOCK
         Wire.begin();
         init(ds3231ControlIntcn);
+#endif
     }
 
     void systemClock::setTime(uint8_t hours, uint8_t minutes, uint8_t seconds) {
@@ -505,7 +511,7 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
         }
     }
 
-    String systemClock::getTimeStr(const String &format) {
+    String systemClock::getTimeStr(const String &format) const {
         String result(format);
         result.replace("%Y", String(getYear()));
         result.replace("%M", twoDigitInt(getMonth()));
@@ -523,6 +529,8 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
     }
 
     void systemClock::updateDevice() {
+
+#ifndef NO_CLOCK
         // update the device time with internal one
         uint8_t century, yearS;
         if (internalTime.year >= 2000) {
@@ -542,9 +550,12 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
         Wire.write(dec2Bcd(internalTime.month) + century);
         Wire.write(dec2Bcd(yearS));
         Wire.endTransmission();
+#endif
     }
 
     void systemClock::updateFromDevice() {
+
+#ifndef NO_CLOCK
         uint8_t century = 0;
         Wire.beginTransmission(ds3231I2CAddr);
         Wire.write(ds3231TimeCalAddr);
@@ -569,7 +580,7 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
         internalTime.month = bcd2Dec(n & 0x1Fu);
         century = (n & 0x80u) >> 7u;
         internalTime.year = 1900 + bcd2Dec(Wire.read()) + 100 * (century == 1);
+#endif
     }
 }
-#endif
 
