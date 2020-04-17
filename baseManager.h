@@ -34,7 +34,8 @@ namespace ob {
           * \brief return the name tof the manager
           * \return the manager name
           */
-         [[nodiscard]] String getName(){return managerName;}
+         [[nodiscard]] String getName() { return managerName; }
+
     protected:
         static T instance; ///< instance of the Status manager
         String managerName = "UnnamedManager"; ///< the name of the manager
@@ -43,7 +44,7 @@ namespace ob {
          * \brief private copy operator to avoid copy the singleton
          * \return Referent to this
          */
-        T &operator=(const T &) = default;
+        T &operator=(const T &) {};
     };
 
 }

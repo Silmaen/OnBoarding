@@ -24,14 +24,14 @@ namespace ob::core {
         String parameters = basecmd.substring(basecmd.indexOf(" "));
         parameters.trim();
         if (pcmd == "uptime") {
-            communication.send(uptime() + "\n");
+            communication.send(uptime());
         } else if (pcmd == "time") {
-            communication.send(clock.getTimeStr() + "\n");
+            communication.send(clock.getTimeStr());
         } else if (pcmd == "settime") {
             if (setTime(parameters))
-                communication.send(clock.getTimeStr() + "\n");
+                communication.send(clock.getTimeStr());
         } else {
-            communication.send("Command not found.\n");
+            communication.send("Command not found.");
         }
     }
 
@@ -57,7 +57,7 @@ namespace ob::core {
         int first = parameter.indexOf(":");
         int last = parameter.lastIndexOf(":");
         if (first == last) {
-            communication.send(F("Error: bad time format, must be hh:mm:ss.\n"));
+            communication.send(F("Error: bad time format, must be hh:mm:ss."));
             return false;
         }
         int hours = parameter.substring(0u, first).toInt();

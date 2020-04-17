@@ -35,7 +35,7 @@ namespace ob::comm {
         // set Power Amplifier value
         // RF24_PA_MIN    RF24_PA_LOW    RF24_PA_HIGH    RF24_PA_MAX
         //   -18dBm         -12dBm          -6dBM            0dBm
-        radio.setPALevel(RF24_PA_MAX);
+        radio.setPALevel(RF24_PA_LOW);
         // Set the transmission data rate (Higher rate reduce range)
         // RF24_250KBPS    RF24_1MBPS    RF24_2MBPS
         radio.setDataRate(RF24_1MBPS);
@@ -48,9 +48,11 @@ namespace ob::comm {
         //         only if autoAck disabled       8bits               16bits
         radio.setCRCLength(RF24_CRC_8);
 
+        radio.enableDynamicPayloads();
+
         // defining pipes
-        radio.openWritingPipe((uint8_t *) "Receiver4586");             // My name (for output)
-        radio.openReadingPipe(1, (uint8_t *) "OnBoarding4586"); // name of the other device (listen to)
+        radio.openWritingPipe((uint8_t *) "OnBoarding4586");             // My name (for output)
+        radio.openReadingPipe(1, (uint8_t *) "Receiver4586"); // name of the other device (listen to)
 
         // starting all
         radio.startListening();
@@ -71,27 +73,34 @@ namespace ob::comm {
 #ifndef NO_RF
         // transmit from radio, to serial
         if (radio.available()) {
-            uint16_t index = 0;
-            while (radio.available() && index < maxBufferSize)
-                radio.read(&buffer[index++], 1);
-            radio.flush_rx(); // if message is too long.... abort receiving!!
-            buffer[index] = '\0';
-            if (index > 0) {
-                if (buffer[0] == '$') {
-                    command.treatCommand(buffer);
-                }
+            uint8_t index = 0, idx = 32;
+            while (idx == 32) {
+                idx = radio.getDynamicPayloadSize();
+                radio.read(&buffer[index], idx);
+                index += idx;
+                delay(5);
             }
+            buffer[index] = '\0';
+            //Serial.println("<<< [" + String(index) + "] '" + buffer + "'");
+            command.treatCommand(buffer);
         }
 #endif
     }
 
     void commManager::send(const String &message) const {
         // send through serial
-        Serial.print(message);
+        Serial.print(message + "\n");
 #ifndef NO_RF
         // send through RF
         radio.stopListening();
-        radio.write(message.c_str(), message.length());
+        uint16_t l = message.length();
+        uint16_t idx = 0;
+        while (l - idx > 31) {
+            radio.write(message.substring(idx, idx + 32).c_str(), 32);
+            idx += 32;
+        }
+        radio.write(message.substring(idx).c_str(), l - idx);
+        //Serial.println(">>> [" + String(l) + "] '" + message + "'");
         radio.startListening();
 #endif
     }

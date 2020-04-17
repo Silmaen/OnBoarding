@@ -56,23 +56,32 @@ generate_arduino_firmware(${PROJECT_NAME})
 ########################################################################################################################
 ########################################################################################################################
 
-set(RECEIVER_PROJECT_NAME OnBoardingReceiver)
+set(RECEIVER_PROJECT_NAME Receiver)
 
 set(${RECEIVER_PROJECT_NAME}_BOARD micro)
 # setTime(ARDUINO_CPU)
 project(${RECEIVER_PROJECT_NAME})
 
+file(GLOB
+        LIBSRCS
+        Receiver/*.cpp
+        )
+
+file(GLOB
+        LIBHDRS
+        Receiver/*.h
+        )
 # Define additional source and header files or default arduino sketch files
-# set(${RECEIVER_PROJECT_NAME}_SRCS ${LIBSRCS})
-# set(${RECEIVER_PROJECT_NAME}_HDRS ${LIBHDRS})
+set(${PROJECT_NAME}_SRCS ${LIBSRCS})
+set(${PROJECT_NAME}_HDRS ${LIBHDRS})
 
 ### Additional static libraries to include in the target.
-set(${RECEIVER_PROJECT_NAME}_ARDLIBS SPI Mirf)
-# set(${RECEIVER_PROJECT_NAME}_LIBS )
+set(${RECEIVER_PROJECT_NAME}_ARDLIBS SPI RF24)
+set(${RECEIVER_PROJECT_NAME}_LIBS)
 
 
 ### Main sketch file
-set(${RECEIVER_PROJECT_NAME}_SKETCH Receiver/receiver.ino)
+# set(${RECEIVER_PROJECT_NAME}_SKETCH Receiver/receiver.ino)
 
 ### Add project directories into the build
 # add_subdirectory()
@@ -83,7 +92,7 @@ set(${RECEIVER_PROJECT_NAME}_SKETCH Receiver/receiver.ino)
 # link_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 
 # For nested library sources replace ${LIB_NAME} with library name for each library
-set(Mirf_RECURSE true)
+# set(Mirf_RECURSE true)
 
 #### Additional settings for programmer. From programmers.txt
 set(${RECEIVER_PROJECT_NAME}_PROGRAMMER avrispmkii)
