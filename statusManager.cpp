@@ -20,6 +20,7 @@ namespace ob::core {
             case statusCode::Running:
                 digitalWrite(LED_BUILTIN, HIGH);
                 return;
+            case statusCode::ClockError:
             case statusCode::NonBlockingError:
                 slowBlinkingFrame(loopCurrent);
                 break;
@@ -51,13 +52,15 @@ namespace ob::core {
             digitalWrite(LED_BUILTIN,LOW);
     }
 
-    const String statusManager::getStatusName() const {
-        switch (code){
+    String statusManager::getStatusName() const {
+        switch (code) {
             case statusCode::Running:
                 return F("Running");
-            case statusCode ::NonBlockingError:
+            case statusCode::ClockError:
+                return F("Clock Error");
+            case statusCode::NonBlockingError:
                 return F("Non Blocking Error");
-            case statusCode ::BlockingError:
+            case statusCode::BlockingError:
                 return F("Blocking Error");
         }
     }

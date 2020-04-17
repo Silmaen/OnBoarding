@@ -5,6 +5,8 @@
  */
 #include <Wire.h>
 #include "systemClock.h"
+#include "statusManager.h"
+#include "commManager.h"
 
 template<> ob::core::systemClock ob::baseManager<ob::core::systemClock>::instance{ob::core::systemClock()};
 
@@ -473,8 +475,7 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
 #endif
 
     void systemClock::setup() {
-        //baseManager::setup();
-
+        baseManager::setup();
 #ifndef NO_CLOCK
         Wire.begin();
         init(ds3231ControlIntcn);
@@ -516,17 +517,16 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
 
     String systemClock::getTimeStr(const String &format) const {
         String result(format);
-        result.replace("%Y", String(getYear()));
-        result.replace("%M", twoDigitInt(getMonth()));
-        result.replace("%D", twoDigitInt(getDay()));
-        result.replace("%h", twoDigitInt(getHours()));
-        result.replace("%m", twoDigitInt(getMinutes()));
-        result.replace("%s", twoDigitInt(getSeconds()));
+        result.replace(F("%Y"), String(getYear()));
+        result.replace(F("%M"), twoDigitInt(getMonth()));
+        result.replace(F("%D"), twoDigitInt(getDay()));
+        result.replace(F("%h"), twoDigitInt(getHours()));
+        result.replace(F("%m"), twoDigitInt(getMinutes()));
+        result.replace(F("%s"), twoDigitInt(getSeconds()));
         return result;
     }
 
-    void systemClock::updateDevice() {
-
+    void systemClock::updateDevice() const {
 #ifndef NO_CLOCK
         // update the device time with internal one
         uint8_t century, yearS;
@@ -565,8 +565,13 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
             }
             delay(2);
         }
-        if (!gotData)
+        if (!gotData) {
+#ifdef DEBUG
+            comm::commManager::get().send(F("Error during clock interrogation."));
+#endif
+            statusManager::get().fallInError(statusCode::ClockError);
             return; // error timeout
+        }
         internalTime.second = bcd2Dec(Wire.read());
         internalTime.minute = bcd2Dec(Wire.read());
         internalTime.hour = bcd2Dec(Wire.read());
@@ -577,6 +582,11 @@ bit0 A1F      Alarm 1 Flag - (1 if alarm1 was triggered)
         uint8_t century = (n & 0x80u) >> 7u;
         internalTime.year = 1900u + bcd2Dec(Wire.read()) + 100u * (century == 1u);
 #endif
+    }
+
+    void systemClock::frame() {
+        baseManager::frame();
+        updateFromDevice();
     }
 }
 

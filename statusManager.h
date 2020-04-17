@@ -14,6 +14,7 @@ namespace ob::core {
          */
         enum class statusCode {
             Running,         ///<  no error... Solid light
+            ClockError,      ///<  the clock module is in error
             NonBlockingError,///<  not a fatal error: slow blinking light
             BlockingError,   ///<  Fatal Error (blocking): fast blinking light
         };
@@ -41,11 +42,12 @@ namespace ob::core {
              * \return the execution status
              */
             [[nodiscard]] statusCode getStatus() const { return code; }
+
             /**
              * \brief return the current status as string
              * \return a string of the current status
              */
-            [[nodiscard]] const String getStatusName() const;
+            [[nodiscard]] String getStatusName() const;
         private:
             /**
              * \brief base constructor

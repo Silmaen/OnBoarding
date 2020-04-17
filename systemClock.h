@@ -12,11 +12,18 @@ namespace ob::core {
      */
     class systemClock : public baseManager<systemClock> {
         friend class baseManager<systemClock>;
+
     public:
         /**
          * \brief to be called at setup time
          */
         void setup() override;
+
+        /**
+         * \brief to be called every loop
+         */
+        void frame() override;
+
         /**
          * \brief setup the current time
          * \param hours the hour in clock (24 hours format)
@@ -24,6 +31,7 @@ namespace ob::core {
          * \param seconds the seconds ont eh clock
          */
         void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds);
+
         /**
          * \brief set the current date
          * \param year the current year
@@ -115,7 +123,8 @@ namespace ob::core {
         /**
          * \brief update the device with the internal date
          */
-        void updateDevice();
+        void updateDevice() const;
+
         /**
          * \brief update the internal date with the device
          */
