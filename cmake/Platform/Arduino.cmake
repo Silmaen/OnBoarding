@@ -1565,7 +1565,7 @@ endfunction()
 # load_arduino_style_settings(SETTINGS_LIST SETTINGS_PATH)
 #
 #      SETTINGS_LIST - Variable name of settings list
-#      SETTINGS_PATH - File path of settings file to load.
+#      SETTINGS_PATH - obfile path of settings file to load.
 #
 # Load a Arduino style settings file into the cache.
 #

@@ -2,35 +2,29 @@
  * \author argawaen
  * \date 08/04/2020
  */
-
-
-#include <Arduino.h>
-#include "statusManager.h"
-#include "commManager.h"
 #include "systemClock.h"
+#include "systemComm.h"
+#include "imuTenDof.h"
 
 using namespace ob;
 
-//#define DEBUG
-core::statusManager& status = core::statusManager::get();
-comm::commManager& communicator = comm::commManager::get();
-core::systemClock& clock = core::systemClock::get();
-
 void setup() {
-    status.setup();
-    clock.setup();
-    communicator.setup();
+    time::setup();
+    comm::setup();
+    imu::setup();
 }
 
 void loop() {
-    status.frame();
-    clock.frame();
-    communicator.frame();
-
-#ifdef DEBUG
-    String a = clock.getTimeStr(F("%Y-%M-%D %h:%m:%s ["));
-    a += status.getName() + F("] status: ") += status.getStatusName() + F("\n");
-    communicator.send(a);
-    delay(500);
-#endif
+    imu::frame();
+    comm::frame();
+    comm::send(String(time::getClockTemperature()) + F(" C")
+               + imu::getAcceleration().toStr()
+               + imu::getRotationRate().toStr()
+               + imu::getMagnetic().toStr()
+               /*+ F(" ") + String(imu::getPressure())*/
+               + F(" ") + String(imu::getAltitude())
+               + F(" ") + String(imu::getTemperature())
+    );
+    //imu::printinner();
+    delay(2000);
 }

@@ -12,6 +12,7 @@
 #endif
 
 #include "commandParser.h"
+#include "allManager.h"
 
 template<> ob::comm::commManager ob::baseManager<ob::comm::commManager>::instance{ob::comm::commManager()};
 
@@ -20,7 +21,6 @@ RF24 radio(10, 9);
 #endif
 
 namespace ob::comm {
-    core::commandParser &command = core::commandParser::get();
 
     void commManager::setup() {
         //baseManager::setup();
@@ -67,7 +67,7 @@ namespace ob::comm {
                 buffer[index++] = Serial.read();
             buffer[index] = '\0';
             if (index > 0) {
-                command.treatCommand(buffer);
+                cmd.treatCommand(buffer);
             }
         }
 #ifndef NO_RF
@@ -82,7 +82,7 @@ namespace ob::comm {
             }
             buffer[index] = '\0';
             //Serial.println("<<< [" + String(index) + "] '" + buffer + "'");
-            command.treatCommand(buffer);
+            cmd.treatCommand(buffer);
         }
 #endif
     }

@@ -5,17 +5,11 @@
  */
 
 #include "commandParser.h"
-#include "commManager.h"
-#include "systemClock.h"
-#include "statusManager.h"
+#include "allManager.h"
 
 template<> ob::core::commandParser ob::baseManager<ob::core::commandParser>::instance{ob::core::commandParser()};
 
 namespace ob::core {
-
-    comm::commManager &communication = comm::commManager::get();
-    systemClock &clock = systemClock::get();
-    statusManager &status = statusManager::get();
 
     void commandParser::treatCommand(const String &cmd) {
         String basecmd(cmd);
@@ -25,19 +19,19 @@ namespace ob::core {
         String parameters = basecmd.substring(basecmd.indexOf(" "));
         parameters.trim();
         if (pcmd == F("uptime")) {
-            communication.send(uptime());
+            communicator.send(uptime());
         } else if (pcmd == F("time")) {
-            communication.send(clock.getTimeStr());
+            communicator.send(clock.getTimeStr());
         } else if (pcmd == F("settime")) {
             if (setTime(parameters))
-                communication.send(clock.getTimeStr());
+                communicator.send(clock.getTimeStr());
         } else if (pcmd == F("setdate")) {
             if (setDate(parameters))
-                communication.send(clock.getTimeStr());
+                communicator.send(clock.getTimeStr());
         } else if (pcmd == F("status")) {
-            communication.send(status.getStatusName());
+            communicator.send(status.getStatusName());
         } else {
-            communication.send(F("Command not found."));
+            communicator.send(F("Command not found."));
         }
     }
 
@@ -62,7 +56,7 @@ namespace ob::core {
         int first = parameter.indexOf(":");
         int last = parameter.lastIndexOf(":");
         if (first == last) {
-            communication.send(F("Error: bad time format, must be hh:mm:ss."));
+            communicator.send(F("Error: bad time format, must be hh:mm:ss."));
             return false;
         }
         int hours = parameter.substring(0u, first).toInt();
@@ -76,7 +70,7 @@ namespace ob::core {
         int first = parameter.indexOf("-");
         int last = parameter.lastIndexOf("-");
         if (first == last) {
-            communication.send(F("Error: bad date format, must be yyyy-mm-dd."));
+            communicator.send(F("Error: bad date format, must be yyyy-mm-dd."));
             return false;
         }
         int year = parameter.substring(0u, first).toInt();

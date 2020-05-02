@@ -3,8 +3,8 @@
  * \date 16/04/2020
  *
  */
+
 #pragma once
-#include "Arduino.h"
 
 /**
  * \brief activate DEBUG options
@@ -14,7 +14,7 @@
 /**
  * \brief deactivate RF module
  */
-#define NO_RF
+//#define NO_RF
 
 /**
  * \brief deactivate Clock module
@@ -24,12 +24,12 @@
 /**
  * \brief deactivate the ARHS sensors
  */
-//#define NO_AHRS
+#define NO_AHRS
 
 /**
  * \brief deactivate SD card module
  */
-#define NO_SDCARD
+//#define NO_SDCARD
 
 /**
  * \brief deactivate GPS module

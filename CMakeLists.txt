@@ -25,7 +25,7 @@ set(${PROJECT_NAME}_SRCS ${LIBSRCS})
 set(${PROJECT_NAME}_HDRS ${LIBHDRS})
 
 ### Additional static libraries to include in the target.
-set(${PROJECT_NAME}_ARDLIBS Wire SPI RF24)
+set(${PROJECT_NAME}_ARDLIBS Wire SPI)
 set(${PROJECT_NAME}_LIBS)
 
 ### Main sketch file

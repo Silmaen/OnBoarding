@@ -41,24 +41,29 @@ namespace ob::core{
         logLevel getVerbosity(){return verbosity;}
         /**
          * \brief log a message into the new logger
+         * \param mng the manager that want to log
          * \param msg the message to log
          * \param msgLevel the verbosity level of the message
          */
-        void logMessage(const String& msg, logLevel msgLevel);
+        void logMessage(const baseManager &mng, const String &msg, logLevel msgLevel);
     private:
         /**
         * \brief base constructor
         */
         logger();
+
         /**
          * \brief destructor
          */
         ~logger() = default;
+
         /**
          * \brief private copy constructor to avoid copy
          */
         logger(const logger &) = default;
+
         logLevel verbosity; ///< actual verbosity
+        String logFilename; ///< the name of the actual logfile
     };
 
 }

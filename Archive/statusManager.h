@@ -15,6 +15,8 @@ namespace ob::core {
         enum class statusCode {
             Running,         ///<  no error... Solid light
             ClockError,      ///<  the clock module is in error
+            LoggerError,     ///<  the logger is in error!
+            SDCardError,     ///<  the logger is in error!
             NonBlockingError,///<  not a fatal error: slow blinking light
             BlockingError,   ///<  Fatal Error (blocking): fast blinking light
         };

@@ -3,6 +3,8 @@
  * \date 08/04/2020
  */
 #include "statusManager.h"
+#include "allManager.h"
+
 // instantiation of the manager
 template<> ob::core::statusManager ob::baseManager<ob::core::statusManager>::instance{ob::core::statusManager()};
 
@@ -21,7 +23,9 @@ namespace ob::core {
                 digitalWrite(LED_BUILTIN, HIGH);
                 return;
             case statusCode::ClockError:
+            case statusCode::LoggerError:
             case statusCode::NonBlockingError:
+            case statusCode::SDCardError:
                 slowBlinkingFrame(loopCurrent);
                 break;
             case statusCode::BlockingError:
@@ -52,12 +56,17 @@ namespace ob::core {
             digitalWrite(LED_BUILTIN,LOW);
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
     String statusManager::getStatusName() const {
         switch (code) {
             case statusCode::Running:
                 return F("Running");
             case statusCode::ClockError:
                 return F("Clock Error");
+            case statusCode::LoggerError:
+                return F("Logger Error");
+            case statusCode::SDCardError:
+                return F("SD Card Error");
             case statusCode::NonBlockingError:
                 return F("Non Blocking Error");
             case statusCode::BlockingError:

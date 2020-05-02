@@ -34,7 +34,7 @@ namespace ob {
           * \brief return the name tof the manager
           * \return the manager name
           */
-         [[nodiscard]] String getName() { return managerName; }
+         [[nodiscard]] String getName() const { return managerName; }
 
     protected:
         static T instance; ///< instance of the Status manager

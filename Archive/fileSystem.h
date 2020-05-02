@@ -4,21 +4,25 @@
  */
 #pragma once
 #include "baseManager.h"
+#include <SD.h>
 
 namespace ob::core {
 
     /**
      * \brief simple class to handle paths
      */
-    class path{
+    class path {
+    public:
         /**
          * \brief default constructor
          */
-        path():pathName(""){}
+        path() : pathName("") {}
+
         /**
          * \brief Destructor
          */
-        ~path() =default;
+        ~path() = default;
+
         /**
          * \brief copy constructor
          */
@@ -92,30 +96,57 @@ namespace ob::core {
         [[nodiscard]] bool isAbsolute() const{
             return (!isVoid()) && pathName.startsWith("/");
         }
+
         /**
          * \brief return true if the path is a relative one
          * \return
          */
-        [[nodiscard]] bool isRelative() const{
-            return ! isAbsolute();
+        [[nodiscard]] bool isRelative() const {
+            return !isAbsolute();
         }
-    private:
+
         String pathName; ///< the path name
     };
 
+    enum class openMode {
+        Read,
+        Write,
+        Append
+    };
 
     /**
      * \brief file system manager
      */
     class fileSystem : public baseManager<fileSystem> {
         friend class baseManager<fileSystem>;
+
     public:
+        /**
+         * \brief function to be called at setup time
+         */
+        void setup() override;
+
+        /**
+         * \brief test existence of a file or directory
+         * \param p the path
+         * \return true if the faile/folder already exists
+         */
+        [[nodiscard]] bool exists(const path &p) const;
+
+        /**
+         * \brief open a file
+         * \param p the path to the file
+         * \param io the openmode of the file
+         * \return the file handle
+         */
+        File open(const path &p, openMode io) const;
 
     private:
         /**
          * \brief base constructor
          */
         fileSystem();
+
         /**
          * \brief destructor
          */
@@ -125,5 +156,7 @@ namespace ob::core {
          * \brief private copy constructor to avoid copy
          */
         fileSystem(const fileSystem &) = default;
+
+        bool hasSdCard;
     };
 }
