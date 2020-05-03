@@ -9,14 +9,6 @@
 
 namespace ob::imu {
 
-    struct vec3D {
-        float x, y, z;
-
-        [[nodiscard]] String toStr() const {
-            return " (" + String(x) + ";" + String(y) + ";" + String(z) + ")";
-        }
-    };
-
     /**
      * \brief to be called at setup time
      */

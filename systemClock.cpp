@@ -20,59 +20,44 @@ PROGMEM constexpr uint8_t ds3231ControlIntcn = 0x4;    ///< Interrupt Control */
 // status register bits
 PROGMEM constexpr uint8_t ds3231StatusEn32Khz = 0x08;    ///< Enable 32KHz Output
 #endif
-
+PROGMEM constexpr uint8_t corr = ~((1u << 8u) - 1u);
 namespace ob::time {
 
 #ifndef NO_CLOCK
 
-    static uint8_t dec2Bcd(const uint8_t val) { return ((val / 10 * 16) + (val % 10)); }
+    uint8_t dec2Bcd(const uint8_t val) { return ((val / 10 * 16) + (val % 10)); }
 
-    static uint8_t bcd2Dec(const uint8_t val) { return ((val / 16 * 10) + (val % 16)); }
+    uint8_t bcd2Dec(const uint8_t val) { return ((val / 16 * 10) + (val % 16)); }
 
 // temperature register
     float getClockTemperature() {
-        float rv;
-        uint8_t tempMsb, tempLsb;
-        int8_t nint;
-        if (!requestFrom(ds3231I2CAddr, ds3231TemperatureAddr, 2u))
-            return 0; // error timeout
-        tempMsb = Wire.read();
-        tempLsb = Wire.read() >> 6u;
+        uint8_t tempMsb = read(ds3231I2CAddr, ds3231TemperatureAddr, 1u);
         if ((tempMsb & 0x80u) != 0u)
-            nint = tempMsb | ~((1u << 8u) - 1u);      // if negative getTime two's complement
+            return 0.25f * (read(ds3231I2CAddr, ds3231TemperatureAddr+1, 1u) >> 6u) + (tempMsb | corr);
         else
-            nint = tempMsb;
-        rv = 0.25f * tempLsb + nint;
-        Wire.endTransmission();
-        return rv;
+            return 0.25f * (read(ds3231I2CAddr, ds3231TemperatureAddr+1, 1u) >> 6u) + tempMsb;
     }
 
 #endif
 
     void setup() {
 #ifndef NO_CLOCK
-        Wire.begin();
+        wireInit();
         write8(ds3231I2CAddr, ds3231ControlAddr, ds3231ControlIntcn);
         write8(ds3231I2CAddr, ds3231StatusAddr, read8(ds3231I2CAddr, ds3231StatusAddr) & ~ds3231StatusEn32Khz);
 #endif
     }
 
-    void
-    updateFromDevice(uint16_t &year, uint8_t &month, uint8_t &day, uint8_t &hour, uint8_t &minute, uint8_t &second) {
+    void updateFromDevice(uint16_t &year, uint8_t &month, uint8_t &day, uint8_t &hour, uint8_t &minute, uint8_t &second) {
 #ifndef NO_CLOCK
-        if (!requestFrom(ds3231I2CAddr, ds3231TimeCalAddr, 7u)) {
-            return; // error timeout
-        }
-        second = bcd2Dec(Wire.read());
-        minute = bcd2Dec(Wire.read());
-        hour = bcd2Dec(Wire.read());
-        Wire.read(); // week day
-        day = bcd2Dec(Wire.read());
-        uint8_t n = Wire.read();
+        second = bcd2Dec(read8(ds3231I2CAddr, ds3231TimeCalAddr));
+        minute = bcd2Dec(read8(ds3231I2CAddr, ds3231TimeCalAddr+1));
+        hour = bcd2Dec(read8(ds3231I2CAddr, ds3231TimeCalAddr+2));
+        day = bcd2Dec(read8(ds3231I2CAddr, ds3231TimeCalAddr+4));
+        uint8_t n = read8(ds3231I2CAddr, ds3231TimeCalAddr+5);
         month = bcd2Dec(n & 0x1Fu);
         uint8_t century = (n & 0x80u) >> 7u;
-        year = 1900u + bcd2Dec(Wire.read()) + 100u * (century == 1u);
-        Wire.endTransmission();
+        year = 1900u + bcd2Dec(read8(ds3231I2CAddr, ds3231TimeCalAddr+6)) + 100u * (century == 1u);
 #else
         second = 0;
         minute = 0;
@@ -95,16 +80,12 @@ namespace ob::time {
             century = 0;
             yearS = year - 1900;
         }
-        Wire.beginTransmission(ds3231I2CAddr);
-        Wire.write(ds3231TimeCalAddr);
-        Wire.write(dec2Bcd(second));
-        Wire.write(dec2Bcd(minute));
-        Wire.write(dec2Bcd(hour));
-        Wire.write(dec2Bcd(0)); // week day
-        Wire.write(dec2Bcd(day));
-        Wire.write(dec2Bcd(month) + century);
-        Wire.write(dec2Bcd(yearS));
-        Wire.endTransmission();
+        write8(ds3231I2CAddr,ds3231TimeCalAddr,dec2Bcd(second));
+        write8(ds3231I2CAddr,ds3231TimeCalAddr+1,dec2Bcd(minute));
+        write8(ds3231I2CAddr,ds3231TimeCalAddr+2,dec2Bcd(hour));
+        write8(ds3231I2CAddr,ds3231TimeCalAddr+4,dec2Bcd(day));
+        write8(ds3231I2CAddr,ds3231TimeCalAddr+5,dec2Bcd(month)+century);
+        write8(ds3231I2CAddr,ds3231TimeCalAddr+6,dec2Bcd(yearS));
 #endif
     }
 

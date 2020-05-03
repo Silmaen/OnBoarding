@@ -4,26 +4,29 @@
  *
  */
 #include "I2CHelperFct.h"
+#include <Wire.h>
 
 namespace ob {
 
-    PROGMEM constexpr uint8_t wireTransactionTimeout = 100;
+    void wireInit(){
+        Wire.begin();
+    }
 
     /// helper functions for I2C communications
-    void write8(byte address, byte reg, byte value) {
+    void write8(u8 address, u8 reg, u8 value) {
         Wire.beginTransmission(address);
         Wire.write(reg);
         Wire.write(value);
         Wire.endTransmission();
     }
 
-    bool requestFrom(byte address, byte reg, byte size) {
+    bool requestFrom(u8 address, u8 reg, u8 size) {
         Wire.beginTransmission(address);
         Wire.write(reg);
         Wire.endTransmission();
 #ifdef I2CREQUESTCHECKS
         bool gotData = false;
-        uint32_t start = millis(); // start timeout
+        u32 start = millis(); // start timeout
         while (millis() - start < wireTransactionTimeout) {
             if (Wire.requestFrom(address, size) == size) {
                 gotData = true;
@@ -38,25 +41,29 @@ namespace ob {
 #endif
     }
 
-    uint32_t read(byte address, byte reg, byte size) {
-        uint32_t value = 0;
+    s32 read(u8 address, u8 reg, u8 size, bool msb) {
+        s32 value = 0;
         if (!requestFrom(address, reg, size))
             return 0; // error timeout
-        for (byte i = 0; i < size; ++i)
-            value = (value << 8u) | (uint8_t) Wire.read();
+        for (u8 i = 0; i < size; ++i)
+            if (msb)
+                value = (value << 8u) | Wire.read();
+            else
+                value |= Wire.read() << (i * 8u) ;
         Wire.endTransmission();
         return value;
     }
 
-    byte read8(byte address, byte reg) {
-        return read(address, reg, 1u);
+
+    s8 read8(u8 address, u8 reg) {
+        return read(address, reg, 1u, true);
     }
 
-    uint16_t read16(byte address, byte reg) {
-        return read(address, reg, 2u);
+    s16 read16Msb(u8 address, u8 reg) {
+        return read(address, reg, 2u, true);
+    }
+    s16 read16Lsb(u8 address, u8 reg) {
+        return read(address, reg, 2u, false);
     }
 
-    int16_t readS16(byte address, byte reg) {
-        return read(address, reg, 2u);
-    }
 }

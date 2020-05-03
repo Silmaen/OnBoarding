@@ -17,8 +17,9 @@ namespace ob::imu {
     PROGMEM constexpr uint8_t GYRO_REGISTER_WHO_AM_I = 0x0Fu;
     PROGMEM constexpr uint8_t GYRO_REGISTER_CTRL_REG1 = 0x20u;
     PROGMEM constexpr uint8_t GYRO_REGISTER_CTRL_REG4 = 0x23u;
+    PROGMEM constexpr uint8_t GYRO_REGISTER_CTRL_REG5 = 0x24u;
     PROGMEM constexpr uint8_t GYRO_REGISTER_OUT_X_L = 0x28u | 0x80u;
-    PROGMEM constexpr float SENSORS_DPS_TO_RADS = (250u * 0.017453293F); /**< Degrees/s to rad/s multiplier  */
+    PROGMEM constexpr float SENSORS_DPS_TO_RADS = (2000u * 0.017453293F); /**< Degrees/s to rad/s multiplier  */
 // ---------------------------------------------------------------------------------------------------------------------
 //  ACCELEROMETER
 // ---------------------------------------------------------------------------------------------------------------------
@@ -79,16 +80,20 @@ namespace ob::imu {
     void setup() {
 #ifndef NO_AHRS
         /* Enable I2C */
-        Wire.begin();
+        wireInit();
 
         //  GYROSCOPE INIT
         /* Make sure we have the correct chip ID since this checks
          for correct address and that the IC is properly connected */
         byte gyroId = read8(L3GD20_ADDRESS, GYRO_REGISTER_WHO_AM_I);
         if ((gyroId == L3GD20_ID) || (gyroId == L3GD20H_ID)) {
-            write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG1, 0x00u);
-            write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG1, 0x0Fu);
-            write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG4, 0x00u);
+            //write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG1, 0x00u);
+            //write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG1, 0x0Fu);
+            //write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG4, 0x00u);
+            write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG1, 0x00);
+            write8(L3GD20_ADDRESS,GYRO_REGISTER_CTRL_REG1, 0x0F);
+            write8(L3GD20_ADDRESS,GYRO_REGISTER_CTRL_REG4, 0x20);
+            write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG5, 0x80);
         }
         //  END GYROSCOPE INIT
 
@@ -127,16 +132,16 @@ namespace ob::imu {
         }
 #endif
         /* Coefficients need to be read once */
-        bmp085Coeffs.ac1 = read(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC1, 2u);
-        bmp085Coeffs.ac2 = read(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC2, 2u);
-        bmp085Coeffs.ac3 = read(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC3, 2u);
-        bmp085Coeffs.ac4 = read(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC4, 2u);
-        bmp085Coeffs.ac5 = read(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC5, 2u);
-        bmp085Coeffs.ac6 = read(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC6, 2u);
-        bmp085Coeffs.b1 = read(BMP085_ADDRESS, BMP085_REGISTER_CAL_B1, 2u);
-        bmp085Coeffs.b2 = read(BMP085_ADDRESS, BMP085_REGISTER_CAL_B2, 2u);
-        bmp085Coeffs.mc = read(BMP085_ADDRESS, BMP085_REGISTER_CAL_MC, 2u);
-        bmp085Coeffs.md = read(BMP085_ADDRESS, BMP085_REGISTER_CAL_MD, 2u);
+        bmp085Coeffs.ac1 = read16Msb(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC1);
+        bmp085Coeffs.ac2 = read16Msb(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC2);
+        bmp085Coeffs.ac3 = read16Msb(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC3);
+        bmp085Coeffs.ac4 = read16Msb(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC4);
+        bmp085Coeffs.ac5 = read16Msb(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC5);
+        bmp085Coeffs.ac6 = read16Msb(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC6);
+        bmp085Coeffs.b1 = read16Msb(BMP085_ADDRESS, BMP085_REGISTER_CAL_B1);
+        bmp085Coeffs.b2 = read16Msb(BMP085_ADDRESS, BMP085_REGISTER_CAL_B2);
+        bmp085Coeffs.mc = read16Msb(BMP085_ADDRESS, BMP085_REGISTER_CAL_MC);
+        bmp085Coeffs.md = read16Msb(BMP085_ADDRESS, BMP085_REGISTER_CAL_MD);
 #endif
     }
 
@@ -153,13 +158,10 @@ namespace ob::imu {
 #ifdef NO_AHRS
         return vec3D{0.0, 0.0, 0.0};
 #else
-        // Read the accelerometer
-        requestFrom(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_OUT_X_L_A, 6u);
-        // Shift values to create properly formed integer (low byte first)
-        // LSBD-first
-        return vec3D{((Wire.read() | (Wire.read() << 8u)) >> 4u) * SENSORS_GRAVITY_STANDARD,
-                     ((Wire.read() | (Wire.read() << 8u)) >> 4u) * SENSORS_GRAVITY_STANDARD,
-                     ((Wire.read() | (Wire.read() << 8u)) >> 4u) * SENSORS_GRAVITY_STANDARD};
+        // read the accelerometer
+        return vec3D{ (float)((int32_t)read16Lsb(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_OUT_X_L_A) >> 4u) * SENSORS_GRAVITY_STANDARD,
+                      (float)((int32_t)read16Lsb(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_OUT_X_L_A + 2) >> 4u) * SENSORS_GRAVITY_STANDARD,
+                      (float)((int32_t)read16Lsb(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_OUT_X_L_A + 4) >> 4u) * SENSORS_GRAVITY_STANDARD};
 #endif
     }
 
@@ -168,13 +170,10 @@ namespace ob::imu {
         return vec3D{0.0, 0.0, 0.0};
 #else
         // Read the magnetometer
-        requestFrom(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_OUT_X_H_M, 6u);
-        // Note high before low (different than accel)
-        // Shift values to create properly formed integer
-        // MSB-first
-        return vec3D{((Wire.read() << 8u) | Wire.read()) / 11.0f,
-                     ((Wire.read() << 8u) | Wire.read()) / 11.0f,
-                     ((Wire.read() << 8u) | Wire.read()) / 9.8f};
+        return vec3D{ (float)read16Msb(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_OUT_X_H_M)  / 11.0f * SENSORS_GAUSS_TO_MICROTESLA,
+                      (float)read16Msb(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_OUT_X_H_M + 2) / 11.0f * SENSORS_GAUSS_TO_MICROTESLA,
+                      (float)read16Msb(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_OUT_X_H_M + 4) / 9.8f * SENSORS_GAUSS_TO_MICROTESLA};
+
 #endif
     }
 
@@ -186,13 +185,11 @@ namespace ob::imu {
 #ifdef NO_AHRS
         return vec3D{0.0, 0.0, 0.0};
 #else
-        /* Read 6 bytes from the sensor */
-        requestFrom(L3GD20_ADDRESS, GYRO_REGISTER_OUT_X_L, 6u);
-        /* Shift values to create properly formed integer (low byte first) */
-        // LSB-first
-        return vec3D{(uint16_t) ((uint16_t) Wire.read() | ((uint16_t) Wire.read() << 8u)) * SENSORS_DPS_TO_RADS,
-                     (uint16_t) ((uint16_t) Wire.read() | ((uint16_t) Wire.read() << 8u)) * SENSORS_DPS_TO_RADS,
-                     (uint16_t) ((uint16_t) Wire.read() | ((uint16_t) Wire.read() << 8u)) * SENSORS_DPS_TO_RADS};
+        // Read the gyroscope
+       return vec3D{ (float)read16Lsb(L3GD20_ADDRESS, GYRO_REGISTER_OUT_X_L) * SENSORS_DPS_TO_RADS,
+                      (float)read16Lsb(L3GD20_ADDRESS, GYRO_REGISTER_OUT_X_L + 2) * SENSORS_DPS_TO_RADS,
+                      (float)read16Lsb(L3GD20_ADDRESS, GYRO_REGISTER_OUT_X_L + 4) * SENSORS_DPS_TO_RADS};
+
 #endif
     }
 
@@ -203,7 +200,7 @@ namespace ob::imu {
     int32_t getRawTemperature() {
         write8(BMP085_ADDRESS, BMP085_REGISTER_CONTROL, BMP085_REGISTER_READTEMPCMD);
         delay(5);
-        int32_t x1 = ((read16(BMP085_ADDRESS, BMP085_REGISTER_TEMPDATA) - (uint32_t) bmp085Coeffs.ac6) *
+        int32_t x1 = ((read16Msb(BMP085_ADDRESS, BMP085_REGISTER_TEMPDATA) - (uint32_t) bmp085Coeffs.ac6) *
                       (uint32_t) bmp085Coeffs.ac5) >> 15u;
         return x1 + ((int32_t) bmp085Coeffs.mc << 11u) / (x1 + (int32_t) bmp085Coeffs.md);
     }
@@ -241,7 +238,7 @@ namespace ob::imu {
 #endif
     }
 
-    static float qnh = 101390.0;
+    static float qnh = 101610.0;
 
     void setupQnh(float qnhValue) {
         qnh = qnhValue * 100.f;

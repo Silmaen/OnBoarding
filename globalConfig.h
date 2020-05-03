@@ -4,12 +4,17 @@
  *
  */
 #pragma once
-#include "Arduino.h"
+#include "myTypes.h"
 
 /**
  * \brief activate DEBUG options
  */
 //#define DEBUG
+
+/**
+ * \brief activate the Global checks
+ */
+#define I2CREQUESTCHECKS
 
 /**
  * \brief deactivate RF module
