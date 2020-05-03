@@ -25,6 +25,5 @@ void loop() {
                + F(" ") + String(imu::getAltitude())
                + F(" ") + String(imu::getTemperature())
     );
-    //imu::printinner();
     delay(2000);
 }

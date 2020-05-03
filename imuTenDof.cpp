@@ -19,23 +19,27 @@ namespace ob::imu {
     PROGMEM constexpr uint8_t GYRO_REGISTER_CTRL_REG4 = 0x23u;
     PROGMEM constexpr uint8_t GYRO_REGISTER_CTRL_REG5 = 0x24u;
     PROGMEM constexpr uint8_t GYRO_REGISTER_OUT_X_L = 0x28u | 0x80u;
-    PROGMEM constexpr float SENSORS_DPS_TO_RADS = (2000u * 0.017453293F); /**< Degrees/s to rad/s multiplier  */
+    PROGMEM constexpr float GYRO_SENSITIVITY_250DPS = 0.00875F;    // Roughly 22/256 for fixed point match
+    PROGMEM constexpr float GYRO_SENSITIVITY_500DPS = 0.0175F;     // Roughly 45/256
+    PROGMEM constexpr float GYRO_SENSITIVITY_2000DPS= 0.070F;      // Roughly 18/256
+    PROGMEM constexpr float SENSORS_DPS_TO_RADS =  0.017453293F; /**< Degrees/s to rad/s multiplier  */
 // ---------------------------------------------------------------------------------------------------------------------
 //  ACCELEROMETER
 // ---------------------------------------------------------------------------------------------------------------------
-    PROGMEM constexpr uint8_t LSM303_ADDRESS_ACCEL = (0x32u >> 1u);
+    PROGMEM constexpr uint8_t LSM303_ADDRESS_ACCEL              = 0x32u >> 1u;
     PROGMEM constexpr uint8_t LSM303_REGISTER_ACCEL_CTRL_REG1_A = 0x20u;
-    PROGMEM constexpr uint8_t LSM303_REGISTER_ACCEL_OUT_X_L_A = 0x28u | 0x80u;
-    PROGMEM constexpr float SENSORS_GRAVITY_STANDARD = 0.00980665F;
+    PROGMEM constexpr uint8_t LSM303_REGISTER_ACCEL_OUT_X_L_A   = 0x28u | 0x80u;
+    PROGMEM constexpr float SENSORS_GRAVITY_STANDARD            = 0.00980665F;
 // ---------------------------------------------------------------------------------------------------------------------
 //  MAGNETOMETER / COMPASS
 // ---------------------------------------------------------------------------------------------------------------------
-    PROGMEM constexpr uint8_t LSM303_ADDRESS_MAG = (0x3Cu >> 1u);
-    PROGMEM constexpr uint8_t LSM303_REGISTER_MAG_MR_REG_M = 0x02u;
-    PROGMEM constexpr uint8_t LSM303_REGISTER_MAG_CRB_REG_M = 0x01u;
-    PROGMEM constexpr uint8_t LSM303_REGISTER_MAG_OUT_X_H_M = 0x03;
-    PROGMEM constexpr uint8_t LSM303_MAGGAIN_1_3 = 0x20u;
-    PROGMEM constexpr float SENSORS_GAUSS_TO_MICROTESLA = (100.0F);
+    PROGMEM constexpr uint8_t LSM303_ADDRESS_MAG             = 0x3Cu >> 1u;
+    PROGMEM constexpr uint8_t LSM303_REGISTER_MAG_CRA_REG_M  = 0x00u;
+    PROGMEM constexpr uint8_t LSM303_REGISTER_MAG_CRB_REG_M  = 0x01u;
+    PROGMEM constexpr uint8_t LSM303_REGISTER_MAG_MR_REG_M   = 0x02u;
+    PROGMEM constexpr uint8_t LSM303_REGISTER_MAG_OUT_X_H_M  = 0x03u;
+    PROGMEM constexpr uint8_t LSM303_MAGGAIN_1_3             = 0x20u;
+    PROGMEM constexpr float SENSORS_GAUSS_TO_MICROTESLA      = 100.0F;
 // ---------------------------------------------------------------------------------------------------------------------
 //  PRESSURE / BAROMETER
 // ---------------------------------------------------------------------------------------------------------------------
@@ -77,60 +81,54 @@ namespace ob::imu {
 // --- GLOBAL SECTION ---
 // ---------------------------------------------------------------------------------------------------------------------
 
+    static void L3GD_startup(){
+        /* Make sure we have the correct chip ID since this checks
+         for correct address and that the IC is properly connected */
+        byte gyroId = read8(L3GD20_ADDRESS, GYRO_REGISTER_WHO_AM_I);
+        if ((gyroId == L3GD20_ID) || (gyroId == L3GD20H_ID)) {
+            /* STARTUP SEQUENCE
+             * 1. Write CTRL_REG2          0      0   HPM1   HPM0  HPCF3  HPCF2  HPCF1  HPCF0
+             * 2. Write CTRL_REG3     I1Int1 I1boot  HLact  PP_OD I2DRDY  I2WTM I2ORun I2Empt
+             * 3. Write CTRL_REG4        BDU    BLE    FS1    FS0      0      0      0    SIM
+             * 5. Write REFERENCE       REF7   REF6   REF5   REF4   REF3   REF2   REF1   REF0
+             * 6. Write INT1_THS    *********************************************************
+             * 7. Write INT1_DUR    *********************************************************
+             * 8. Write INT1_CFG    *********************************************************
+             * 9. Write CTRL_REG5       BOOT FIFOEN      0   HPen I1Sel1 I1sel2 O_Sel1 o_Sel0
+             * 10. Write CTRL_REG1       DR1    DR0    BW1    BW0     PD    Zen    Yen    Xen
+             *                             1      1      1      1      1      1      1      1    0xFF
+             */
+            write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG1, 0x00u); // PowerDown
+            write8(L3GD20_ADDRESS,GYRO_REGISTER_CTRL_REG4, 0x00); // +/- 250 DPS max precision, lowest range
+            //write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG5, 0x80); // BOOT, FIFO disable, Interupts disable
+            write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG1, 0xFFu); // [ODR 760Hz, cutoff 100Hz] [Normal, all axis enabled]
+        }
+    }
+
     void setup() {
 #ifndef NO_AHRS
         /* Enable I2C */
         wireInit();
 
         //  GYROSCOPE INIT
-        /* Make sure we have the correct chip ID since this checks
-         for correct address and that the IC is properly connected */
-        byte gyroId = read8(L3GD20_ADDRESS, GYRO_REGISTER_WHO_AM_I);
-        if ((gyroId == L3GD20_ID) || (gyroId == L3GD20H_ID)) {
-            //write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG1, 0x00u);
-            //write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG1, 0x0Fu);
-            //write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG4, 0x00u);
-            write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG1, 0x00);
-            write8(L3GD20_ADDRESS,GYRO_REGISTER_CTRL_REG1, 0x0F);
-            write8(L3GD20_ADDRESS,GYRO_REGISTER_CTRL_REG4, 0x20);
-            write8(L3GD20_ADDRESS, GYRO_REGISTER_CTRL_REG5, 0x80);
-        }
+        L3GD_startup();
         //  END GYROSCOPE INIT
 
         //  ACCELEROMETER INIT
-        // Enable the accelerometer (100Hz)
-        write8(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_CTRL_REG1_A, 0x57u);
-#ifdef DEBUG
-        // LSM303DLHC has no WHOAMI register so read CTRL_REG1_A back to check
-        // if we are connected or not
-        uint8_t reg1_a = read8(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_CTRL_REG1_A);
-        if (reg1_a != 0x57){
-            // There is a problem
-        }
-#endif
+        /*// Enable the accelerometer (100Hz)
+        write8(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_CTRL_REG1_A, 0x57u);*/
+        // Enable the accelerometer (1344Hz)
+        write8(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_CTRL_REG1_A, 0x97u);
         //  MAGNETOMETER INIT
-        // Enable the magnetometer
+        // Enable continuous conversion
         write8(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_MR_REG_M, 0x00u);
-#ifdef DEBUG
-        // LSM303DLHC has no WHOAMI register so read CRA_REG_M to check
-        // the default value (0b00010000/0x10)
-        uint8_t reg1_a = read8(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_CRA_REG_M);
-        if (reg1_a != 0x10){
-            return false;
-        }
-#endif
+        // Enable the magnetometer (200Hz & Temperature disabled)
+        write8(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_CRA_REG_M, 0x1Cu);
         // Set the gain to a known level
         write8(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_CRB_REG_M, LSM303_MAGGAIN_1_3);
         //  END MAGNETOMETER INIT
 
         // BAROMETER
-#ifdef DEBUG
-        /* Make sure we have the right device */
-        uint8_t id = read8(BMP085_ADDRESS, BMP085_REGISTER_CHIPID);
-        if(id != 0x55) {
-            return false;
-        }
-#endif
         /* Coefficients need to be read once */
         bmp085Coeffs.ac1 = read16Msb(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC1);
         bmp085Coeffs.ac2 = read16Msb(BMP085_ADDRESS, BMP085_REGISTER_CAL_AC2);
@@ -170,9 +168,9 @@ namespace ob::imu {
         return vec3D{0.0, 0.0, 0.0};
 #else
         // Read the magnetometer
-        return vec3D{ (float)read16Msb(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_OUT_X_H_M)  / 11.0f * SENSORS_GAUSS_TO_MICROTESLA,
-                      (float)read16Msb(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_OUT_X_H_M + 2) / 11.0f * SENSORS_GAUSS_TO_MICROTESLA,
-                      (float)read16Msb(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_OUT_X_H_M + 4) / 9.8f * SENSORS_GAUSS_TO_MICROTESLA};
+        return vec3D{ (float)read16Msb(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_OUT_X_H_M) / 11.0f,
+                      (float)read16Msb(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_OUT_X_H_M + 2)/ 11.0f,
+                      (float)read16Msb(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_OUT_X_H_M + 4) / 9.8f};
 
 #endif
     }
@@ -186,9 +184,9 @@ namespace ob::imu {
         return vec3D{0.0, 0.0, 0.0};
 #else
         // Read the gyroscope
-       return vec3D{ (float)read16Lsb(L3GD20_ADDRESS, GYRO_REGISTER_OUT_X_L) * SENSORS_DPS_TO_RADS,
-                      (float)read16Lsb(L3GD20_ADDRESS, GYRO_REGISTER_OUT_X_L + 2) * SENSORS_DPS_TO_RADS,
-                      (float)read16Lsb(L3GD20_ADDRESS, GYRO_REGISTER_OUT_X_L + 4) * SENSORS_DPS_TO_RADS};
+       return vec3D{ (float)read16Lsb(L3GD20_ADDRESS, GYRO_REGISTER_OUT_X_L ) * GYRO_SENSITIVITY_250DPS,
+                      (float)read16Lsb(L3GD20_ADDRESS, GYRO_REGISTER_OUT_X_L + 2) * GYRO_SENSITIVITY_250DPS,
+                      (float)read16Lsb(L3GD20_ADDRESS, GYRO_REGISTER_OUT_X_L + 4) * GYRO_SENSITIVITY_250DPS};
 
 #endif
     }
@@ -238,7 +236,7 @@ namespace ob::imu {
 #endif
     }
 
-    static float qnh = 101610.0;
+    static float qnh = 101710.0;
 
     void setupQnh(float qnhValue) {
         qnh = qnhValue * 100.f;
